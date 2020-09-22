@@ -12,6 +12,7 @@ import { AppComponent } from './app.component';
 import { from } from 'rxjs';
 
 import { DishService } from './services/dish.service';
+import { PromotionService } from './services/promotion.service';
 
 import 'hammerjs';
 
@@ -48,7 +49,8 @@ import { AppRoutingModule } from './app-routing/app-routing.module'
     AppRoutingModule
   ],
   providers: [
-    DishService
+    DishService,
+    PromotionService
   ],
   bootstrap: [AppComponent]
 })
