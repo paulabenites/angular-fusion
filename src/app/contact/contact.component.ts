@@ -1,26 +1,38 @@
 import { Component, OnInit , ViewChild} from '@angular/core';
 import { FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { Feedback, ContactType } from '../shared/Feedback';
+import { flyInOut,visibility,expand} from '../animations/app.animation';
+import { FeedbackService } from '../services/feedback.service';
 
 @Component({
   selector: 'app-contact',
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss']
+  styleUrls: ['./contact.component.scss'],
+  host: {
+    '[@flyInOut]' : 'true',
+    'style': 'display:block;'
+  },
+  animations: [flyInOut(),expand()]
 })
 export class ContactComponent implements OnInit {
 
   feedbackForm: FormGroup;
   feedback: Feedback;
+  feedbackcopy: Feedback;
   contactType = ContactType;
+  errMess: string;
+  hideForm = false;
+  hideSpinner = true;
+  hideSubmission = true;
 
-  @ViewChild('fform') feedbackFormDirective; //asegura que form este completamente reseteado
+  @ViewChild('fform') feedbackFormDirective;
 
   formErrors = {
     'firstname': '',
     'lastname' : '',
     'telnum': '',
     'email': ''
-  }; //Va a ir agregando errores
+  }; 
 
   validationMessages ={
     'firstname': {
@@ -43,7 +55,8 @@ export class ContactComponent implements OnInit {
     }
   }
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,
+    private feedbackservice:FeedbackService) {
     this.createForm();
     
   }
@@ -71,7 +84,6 @@ export class ContactComponent implements OnInit {
     const form = this.feedbackForm;
     for (const field in this.formErrors) {
       if(this.formErrors.hasOwnProperty(field)) {
-        //si hay algun mensaje de error, clear
         this.formErrors[field] = '';
         const control = form.get(field);
         if(control && control.dirty && !control.valid) {
@@ -86,10 +98,31 @@ export class ContactComponent implements OnInit {
     }
   }
 
-
   onSubmit() {
+    this.hideForm = true;
+    this.hideSpinner = false;
+    this.hideSubmission = true;
+
     this.feedback = this.feedbackForm.value;
     console.log(this.feedback);
+    this.feedbackservice.postFeedback(this.feedbackcopy)
+      .subscribe(feedback => {
+        this.hideForm = true;
+        this.hideSpinner = true;
+        this.hideSubmission = false;
+        setTimeout(() => {
+          this.feedback = feedback; 
+          this.feedbackcopy = feedback;
+
+          this.hideForm = false;
+          this.hideSpinner = true;
+          this.hideSubmission = true;
+        }, 5000);
+      },
+      errmess => {
+        this.feedback = null;this.feedbackcopy = null;this.errMess = <any>errmess;
+    });
+
     this.feedbackForm.reset( {
       firstname: '',
       lastname: '',
